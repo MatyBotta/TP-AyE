@@ -23,7 +23,11 @@ int insertarOrdArbol (tArbolBin * pa, const void * info, size_t tamInfo, compara
         else if(comparacion > 0)
             pa = &(*pa)->izq;
         else
+        {
+            free(nue->info);
+            free(nue);
             return DUPLICADO;
+        }
     }
 
     memcpy(nue->info, info, tamInfo);
