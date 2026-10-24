@@ -4,11 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#define MINIMO(x,y) ((x) < (y) ? (x) : (y))
-
-#define SIN_MEM     1
-#define CLA_DUP     2
-#define TODO_BIEN   0
+#include "comun.h"
 
 typedef struct sNodo
 {
@@ -18,7 +14,6 @@ typedef struct sNodo
 } tNodo;
 
 typedef tNodo *tLista;
-typedef int (*comparar)(const void* a, const void* b);
 
 /// Primitivas
 // Administrativas
@@ -34,11 +29,12 @@ int ponerEnOrden(tLista *pl, const void *pd, size_t tamElem,int (*comparar)(cons
 
 // Ver
 int verPrimeroLista(const tLista *pl, void *pd, size_t tamDato);
-int verUltimoLista(tLista *pl, void *pd, size_t tamDato);
+int verUltimoLista(const tLista *pl, void *pd, size_t tamDato);
 
 // Sacar
 int sacarPrimeroLista(tLista *pl, void *pd, size_t tamDato);
-int sacarUltimoLista(tLista *pl);
+int sacarUltimoLista(tLista *pl, void * dst, size_t tamDst);
+int eliminarUltimoLista(tLista * pl);
 void vaciarLista(tLista *pl);
 
 // Mostrar

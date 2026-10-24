@@ -5,17 +5,34 @@ void crearLista(tLista *pl)
     *pl = NULL;
 }
 
-int sacarUltimoLista(tLista *pl)
+int sacarUltimoLista(tLista *pl, void * dst, size_t tamDst)
 {
-    tLista *aux = pl;
-    if(*aux == NULL)
+    if(*pl == NULL)
         return 0;
 
-    while((*aux)->sig)
-        aux = &(*aux)->sig;
-    free((*aux)->info);
-    free(*aux);
-    *aux = NULL;
+    while((*pl)->sig)
+        pl = &(*pl)->sig;
+
+    memcpy(dst, (*pl)->info, MINIMO((*pl)->tamInfo, tamDst));
+    free((*pl)->info);
+    free(*pl);
+    *pl = NULL;
+
+    return 1;
+}
+
+int eliminarUltimoLista(tLista * pl)
+{
+    if(*pl == NULL)
+        return 0;
+
+    while((*pl)->sig)
+        pl = &(*pl)->sig;
+
+    free((*pl)->info);
+    free(*pl);
+    *pl = NULL;
+
     return 1;
 }
 
@@ -89,7 +106,7 @@ int ponerAlFinal(tLista *pl,const void *pd, size_t tamDato)
     tNodo *nue;
 
     while(*pl)
-        *pl = (*pl)->sig;
+        pl = &(*pl)->sig;
 
     if((nue = (tNodo*)malloc(sizeof(tNodo))) == NULL || (nue->info = malloc(tamDato)) == NULL)
     {
@@ -104,12 +121,12 @@ int ponerAlFinal(tLista *pl,const void *pd, size_t tamDato)
     return 1;
 }
 
-int verUltimoLista(tLista *pl, void *pd, size_t tamDato)
+int verUltimoLista(const tLista *pl, void *pd, size_t tamDato)
 {
     if(*pl == NULL)
         return 0;
     while((*pl)->sig)
-        *pl = (*pl)->sig;
+        pl = &(*pl)->sig;
     memcpy(pd, (*pl)->info, MINIMO(tamDato, (*pl)->tamInfo));
     return 1;
 }
@@ -166,7 +183,7 @@ int ponerEnOrden(tLista *pl, const void *pd, size_t tamElem,int (*comparar)(cons
         {
             if(!acomular(&(*pl)->info, &(*pl)->tamInfo, pd, tamElem))
                 return SIN_MEM;
-            return CLA_DUP;
+            return DUPLICADO;
         }
     }
     if((nue = (tNodo *)malloc(sizeof(tNodo))) == NULL || (nue->info = malloc(tamElem)) == NULL)
