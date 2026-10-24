@@ -1,0 +1,9 @@
+# Codeblocks
+*.cbp
+*.layout
+*.depend
+
+# Binarios
+*.o
+obj/
+bin/

@@ -20,35 +20,31 @@ typedef struct sNodo
 typedef tNodo *tLista;
 typedef int (*comparar)(const void* a, const void* b);
 
-typedef struct{
-    tLista pri;
-    unsigned cap;
-    unsigned ce;
-    comparar cmp;
-} tLRU;
-
-
-void crear_lrucache(tLRU *pl, unsigned cap, comparar cmp);
-int agregar_lrucache(tLRU *pl, void *pd, size_t tamDato);
-void *obtener_lrucache(tLRU *pl, void *pd, size_t tamDato);
-int sacarUltimoLista(tLista *pl);
-int borrar_lrucache(tLRU *pl, void *pd);
-int ponerAlComienzo(tLista *pl, const void *pd, size_t tamDato);
-void vaciarLista(tLista *pl);
-void vaciar_lrucache(tLRU *pl);
-void* ElimCod(tLRU *pl, void *pd, size_t tamDato);
-
+/// Primitivas
+// Administrativas
+void crearLista(tLista *pl);
 int listaVacia(tLista *pl);
 int listaLlena(const tLista *pl, size_t tamDato);
-int sacarPrimeroLista(tLista *pl, void *pd, size_t tamDato);
-int verPrimeroLista(const tLista *pl, void *pd, size_t tamDato);
+void ordenar(tLista *pl, int (*comparar)(const void *, const void *));
+
+// Insertar
+int ponerAlComienzo(tLista *pl, const void *pd, size_t tamDato);
 int ponerAlFinal(tLista *pl,const void *pd, size_t tamDato);
+int ponerEnOrden(tLista *pl, const void *pd, size_t tamElem,int (*comparar)(const void*,const void*), int (*acomular)(void**, size_t *, const void *, size_t));
+
+// Ver
+int verPrimeroLista(const tLista *pl, void *pd, size_t tamDato);
 int verUltimoLista(tLista *pl, void *pd, size_t tamDato);
+
+// Sacar
+int sacarPrimeroLista(tLista *pl, void *pd, size_t tamDato);
+int sacarUltimoLista(tLista *pl);
+void vaciarLista(tLista *pl);
+
+// Mostrar
 int mostrarLista(const tLista *pl, void(*mostrar)(const void*, FILE*), FILE *fp);
 int mostrarListaAlReves(const tLista *pl, void(*mostrar)(const void*, FILE*), FILE *fp);
 int mostrarListaAlRevesYVaciar(tLista *pl, void(*mostrar)(const void*, FILE*), FILE *fp);
-int ponerEnOrden(tLista *pl, const void *pd, size_t tamElem,int (*comparar)(const void*,const void*), int (*acomular)(void**, size_t *, const void *, size_t));
-void ordenar(tLista *pl, int (*comparar)(const void *, const void *));
 
 
 #endif // LISTA_H_INCLUDED
