@@ -15,7 +15,7 @@ int agregar_lrucache(tLRU *pl, void *pd, size_t tamDato)
 
     if(pl->cap == pl->ce)
     {
-        sacarUltimoLista(&(pl->pri));
+        eliminarUltimoLista(&(pl->pri));
         pl->ce--;
     }
 
