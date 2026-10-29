@@ -12,8 +12,14 @@ typedef struct sNodoD
     struct sNodoD * ant;
 } tNodoD;
 
-typedef tNodoD* tListaD;
+typedef struct
+{
+    tNodoD * pri;
+    tNodoD * ult;
+} tListaD;
 
-void crearListaD(tListaD * pl);
+void crearListaD (tListaD * pl);
+int insertarPrimeroListaD (tListaD * pl, const void * dato, size_t tamDato);
+int eliminarUltimoListaD (tListaD * pl);
 
 #endif // LISTAD_H_INCLUDED

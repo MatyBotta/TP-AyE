@@ -7,7 +7,8 @@ typedef enum
 {
     TODO_BIEN,
     SIN_MEM,
-    DUPLICADO
+    DUPLICADO,
+    LISTA_VACIA
 
 } cod_return;
 
