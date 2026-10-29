@@ -21,5 +21,6 @@ typedef struct
 void crearListaD (tListaD * pl);
 int insertarPrimeroListaD (tListaD * pl, const void * dato, size_t tamDato);
 int eliminarUltimoListaD (tListaD * pl);
+int moverAlComienzo (tListaD * pl, void * elem);
 
 #endif // LISTAD_H_INCLUDED

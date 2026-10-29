@@ -8,7 +8,8 @@ typedef enum
     TODO_BIEN,
     SIN_MEM,
     DUPLICADO,
-    LISTA_VACIA
+    LISTA_VACIA,
+    ERR_ARG
 
 } cod_return;
 
