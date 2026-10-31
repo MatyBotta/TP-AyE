@@ -19,8 +19,10 @@ typedef struct
 } tListaD;
 
 void crearListaD (tListaD * pl);
-int insertarPrimeroListaD (tListaD * pl, const void * dato, size_t tamDato);
+tNodoD * insertarPrimeroListaD (tListaD * pl, const void * dato, size_t tamDato);
 int eliminarUltimoListaD (tListaD * pl);
+int eliminarNodoListaD (tListaD * pl, tNodoD * nodo);
 int moverAlComienzo (tListaD * pl, void * elem);
+int vaciarListaD(tListaD *pl);
 
 #endif // LISTAD_H_INCLUDED

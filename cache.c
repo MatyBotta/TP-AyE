@@ -46,51 +46,27 @@ int borrar_lrucache(tLRU *pl, void *pd)
     return 1;
 }
 
-void *obtener_lrucache(tLRU *pl, void *pd, size_t tamDato)
-{
-    void *info = ElimCod(pl, pd, tamDato);
-
-    if(!info)
-        return NULL;
-
-    if(!ponerAlComienzo(&(pl->pri), info, tamDato))
-    {
-        free(info);
-        return NULL;
-    }
-
-    pl->ce++;
-    return info;
-}
-
-void* ElimCod(tLRU *pl, void *pd, size_t tamDato)
+void *obtener_lrucache(tLRU *pl, void *pd)
 {
     tLista *aux = &(pl->pri);
-    tNodo *elim;
-    void *info = malloc(tamDato);
-    if(!info)
-        return 0;
+    tNodo *nodo;
 
     while (*aux && pl->cmp(pd, (*aux)->info) != 0)
         aux = &(*aux)->sig;
 
     if (*aux == NULL)
-    {
-        free(info);
-        return 0;
-    }
+        return NULL;
 
-    elim = *aux;
-    *aux = elim->sig;
-    memcpy(info, elim->info, MINIMO(tamDato, elim->tamInfo));
-    free(elim->info);
-    free(elim);
-    pl->ce--;
-    return info;
+    nodo = *aux;
+    *aux = nodo->sig;
+    nodo->sig = pl->pri;
+    pl->pri = nodo;
+
+    return nodo->info;
 }
 
 void vaciar_lrucache(tLRU *pl)
 {
     vaciarLista(&(pl->pri));
-    free(pl);
+    pl->ce = 0;
 }
