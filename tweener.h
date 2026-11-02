@@ -19,6 +19,8 @@ typedef enum
     LOTE_CONCENTRADO, LOTE_DISPERSO, LOTE_ORDENADO
 } tTipoLote;
 
+typedef enum { VARIANTE_SIN_CACHE, VARIANTE_P1, VARIANTE_P2 } tVariante;
+
 typedef struct
 {
     int id;
@@ -34,10 +36,10 @@ typedef struct
 int generarPosteos (const char *nombre);
 int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla);
 int procesarUsuario (const char * posteos, const char * usuarios, int * cantUsuarios);
-int procesarUsuarioCache (const char * posteos, const char * usuarios, int * cantUsuarios,
-                          int * hits, int * misses, int * lecturas);
-int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int * cantUsuarios,
-                           int * hits, int * misses, int * lecturas);
+int procesarUsuarioCache (const char * posteos, const char * usuarios, int tamCache,
+                          int * cantUsuarios, int * hits, int * misses, int * lecturas);
+int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int tamCache,
+                           int * cantUsuarios, int * hits, int * misses, int * lecturas);
 
 int compararPosteo (const void * s1, const void * s2);
 

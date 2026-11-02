@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "tweener.h"
 
 int generarPosteos(const char *nombre)
@@ -114,7 +115,8 @@ int procesarUsuario (const char * posteos, const char * usuarios, int * cantUsua
     return TODO_BIEN;
 }
 
-int procesarUsuarioCache (const char * posteos, const char * usuarios, int * cantUsuarios, int * hits, int * misses, int * lecturas)
+int procesarUsuarioCache (const char * posteos, const char * usuarios, int tamCache,
+                          int * cantUsuarios, int * hits, int * misses, int * lecturas)
 {
     tPosteo post;
     tUsuario usuario;
@@ -134,7 +136,7 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int * can
         return ERR_ARCHIVO;
     }
 
-    crear_lrucache(&cache, TAM_CACHE, compararPosteo);
+    crear_lrucache(&cache, tamCache, compararPosteo);
 
     *cantUsuarios = 0;
     *hits = 0;
@@ -171,7 +173,8 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int * can
     return TODO_BIEN;
 }
 
-int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int * cantUsuarios, int * hits, int * misses, int * lecturas)
+int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int tamCache,
+                           int * cantUsuarios, int * hits, int * misses, int * lecturas)
 {
     tPosteo post;
     tUsuario usuario;
@@ -191,7 +194,7 @@ int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int * ca
         return ERR_ARCHIVO;
     }
 
-    crear_lrucache2(&cache, TAM_CACHE, compararPosteo);
+    crear_lrucache2(&cache, tamCache, compararPosteo);
 
     *cantUsuarios = 0;
     *hits = 0;
@@ -234,4 +237,79 @@ int compararPosteo (const void * s1, const void * s2)
     tPosteo * post2 = (tPosteo*)s2;
 
     return post1->id - post2->id;
+}
+
+static double ahora_seg(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec + ts.tv_nsec / 1e9;
+}
+
+int simular(const char *posteos, const char *usuarios,
+            int tamCache, tVariante variante)
+{
+    int cantUsuarios = 0;
+    int hits = 0, misses = 0, lecturas = 0;
+    int rc;
+    double t0, t1, seg;
+
+    t0 = ahora_seg();
+
+    switch (variante)
+    {
+        case VARIANTE_SIN_CACHE:
+            rc = procesarUsuario(posteos, usuarios, &cantUsuarios);
+            break;
+        case VARIANTE_P1:
+            rc = procesarUsuarioCache(posteos, usuarios, tamCache,
+                                      &cantUsuarios, &hits, &misses, &lecturas);
+            break;
+        case VARIANTE_P2:
+            rc = procesarUsuarioCache2(posteos, usuarios, tamCache,
+                                       &cantUsuarios, &hits, &misses, &lecturas);
+            break;
+    }
+
+    t1 = ahora_seg();
+    seg = t1 - t0;
+
+    if (rc != TODO_BIEN) {
+        fprintf(stderr, "Error en simulacion (codigo %d)\n", rc);
+        return rc;
+    }
+
+    long totalAccesos = (long)cantUsuarios * MAX_FEED;
+
+    /* ---- salida ---- */
+    const char *nombreVar =
+        variante == VARIANTE_SIN_CACHE ? "SIN CACHE" :
+        variante == VARIANTE_P1        ? "LRU P1"    : "LRU P2";
+
+    printf("========================================\n");
+    printf("Variante            : %s\n", nombreVar);
+    printf("Cache size          : %d\n", tamCache);
+    printf("Usuarios            : %d\n", cantUsuarios);
+    printf("Accesos totales     : %ld\n", totalAccesos);
+    printf("Tiempo total        : %.6f s\n", seg);
+    printf("Prom. por posteo    : %.9f s\n", seg / totalAccesos);
+    printf("Prom. por usuario   : %.9f s\n", seg / cantUsuarios);
+
+    if (variante != VARIANTE_SIN_CACHE)
+    {
+        printf("Hits                : %d\n", hits);
+        printf("Misses              : %d\n", misses);
+        printf("Lecturas al archivo : %d\n", lecturas);
+        printf("Hit rate            : %.2f %%\n",
+               100.0 * hits / totalAccesos);
+
+        if (hits + misses != totalAccesos)
+            fprintf(stderr, "WARN: hits+misses (%d) != accesos (%ld)\n",
+                    hits + misses, totalAccesos);
+        if (lecturas != misses)
+            fprintf(stderr, "WARN: lecturas (%d) != misses (%d)\n",
+                    lecturas, misses);
+    }
+
+    return TODO_BIEN;
 }
