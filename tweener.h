@@ -11,6 +11,8 @@
 #define TAM_CACHE 10
 
 #include "comun.h"
+#include "cache.h"
+#include "cache2.h"
 
 typedef enum
 {
@@ -32,5 +34,7 @@ typedef struct
 int generarPosteos (const char *nombre);
 int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla);
 int procesarUsuario (const char * posteos, const char * usuarios, int * cantUsuarios);
+
+int compararPosteo (const void * s1, const void * s2);
 
 #endif // TWEENER_H_INCLUDED

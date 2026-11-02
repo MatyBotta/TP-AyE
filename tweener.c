@@ -114,18 +114,19 @@ int procesarUsuario (const char * posteos, const char * usuarios, int * cantUsua
     return TODO_BIEN;
 }
 
-/*
+
 int procesarUsuarioCache (const char * posteos, const char * usuarios, int * cantUsuarios)
 {
     tPosteo post;
     tUsuario usuario;
     tLRU cache;
 
-    FILE * pf_post;
-    FILE * pf_usuarios = fopen(usuarios, "rb");
+    void * info = NULL;
+    FILE * pf_post, * pf_usuarios;
+
+    pf_usuarios = fopen(usuarios, "rb");
     if(!pf_usuarios)
         return ERR_ARCHIVO;
-
 
     pf_post = fopen(posteos, "rb");
     if(!pf_post)
@@ -134,6 +135,8 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int * can
         return ERR_ARCHIVO;
     }
 
+    crear_lrucache(&cache, TAM_CACHE, compararPosteo);
+
     *cantUsuarios = 0;
 
     while(fread(&usuario, sizeof(tUsuario), 1, pf_usuarios))
@@ -141,7 +144,12 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int * can
         for(int i = 0; i < MAX_FEED; i++)
         {
             fseek(pf_post, usuario.feed[i] * sizeof(tPosteo), SEEK_SET);
-            fread(&post, sizeof(tPosteo), 1, pf_post);
+
+            if(!(info = obtener_lrucache(&cache, &(usuario.feed[i]))))
+            {
+                fread(&post, sizeof(tPosteo), 1, pf_post);
+                agregar_lrucache(&cache, &post, sizeof(tPosteo));
+            }
         }
 
         (*cantUsuarios)++;
@@ -149,8 +157,62 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int * can
 
     fclose(pf_post);
     fclose(pf_usuarios);
+    vaciar_lrucache(&cache);
 
     return TODO_BIEN;
 }
 
-*/
+int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int * cantUsuarios)
+{
+    tPosteo post;
+    tUsuario usuario;
+    tLRU2 cache;
+
+    void * info = NULL;
+    FILE * pf_post, * pf_usuarios;
+
+    pf_usuarios = fopen(usuarios, "rb");
+    if(!pf_usuarios)
+        return ERR_ARCHIVO;
+
+    pf_post = fopen(posteos, "rb");
+    if(!pf_post)
+    {
+        fclose(pf_usuarios);
+        return ERR_ARCHIVO;
+    }
+
+    crear_lrucache2(&cache, TAM_CACHE, compararPosteo);
+
+    *cantUsuarios = 0;
+
+    while(fread(&usuario, sizeof(tUsuario), 1, pf_usuarios))
+    {
+        for(int i = 0; i < MAX_FEED; i++)
+        {
+            fseek(pf_post, usuario.feed[i] * sizeof(tPosteo), SEEK_SET);
+
+            if(!(info = obtener_lrucache2(&cache, &(usuario.feed[i]))))
+            {
+                fread(&post, sizeof(tPosteo), 1, pf_post);
+                agregar_lrucache2(&cache, &post, sizeof(tPosteo));
+            }
+        }
+
+        (*cantUsuarios)++;
+    }
+
+    fclose(pf_post);
+    fclose(pf_usuarios);
+    vaciar_lrucache2(&cache);
+
+    return TODO_BIEN;
+}
+
+int compararPosteo (const void * s1, const void * s2)
+{
+    tPosteo * post1 = (tPosteo*)s1;
+    tPosteo * post2 = (tPosteo*)s2;
+
+    return post1->id - post2->id;
+}
