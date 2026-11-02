@@ -143,10 +143,9 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int * can
     {
         for(int i = 0; i < MAX_FEED; i++)
         {
-            fseek(pf_post, usuario.feed[i] * sizeof(tPosteo), SEEK_SET);
-
             if(!(info = obtener_lrucache(&cache, &(usuario.feed[i]))))
             {
+                fseek(pf_post, usuario.feed[i] * sizeof(tPosteo), SEEK_SET);
                 fread(&post, sizeof(tPosteo), 1, pf_post);
                 agregar_lrucache(&cache, &post, sizeof(tPosteo));
             }
@@ -190,10 +189,9 @@ int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int * ca
     {
         for(int i = 0; i < MAX_FEED; i++)
         {
-            fseek(pf_post, usuario.feed[i] * sizeof(tPosteo), SEEK_SET);
-
             if(!(info = obtener_lrucache2(&cache, &(usuario.feed[i]))))
             {
+                fseek(pf_post, usuario.feed[i] * sizeof(tPosteo), SEEK_SET);
                 fread(&post, sizeof(tPosteo), 1, pf_post);
                 agregar_lrucache2(&cache, &post, sizeof(tPosteo));
             }
