@@ -114,8 +114,7 @@ int procesarUsuario (const char * posteos, const char * usuarios, int * cantUsua
     return TODO_BIEN;
 }
 
-
-int procesarUsuarioCache (const char * posteos, const char * usuarios, int * cantUsuarios)
+int procesarUsuarioCache (const char * posteos, const char * usuarios, int * cantUsuarios, int * hits, int * misses, int * lecturas)
 {
     tPosteo post;
     tUsuario usuario;
@@ -138,6 +137,9 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int * can
     crear_lrucache(&cache, TAM_CACHE, compararPosteo);
 
     *cantUsuarios = 0;
+    *hits = 0;
+    *misses = 0;
+    *lecturas = 0;
 
     while(fread(&usuario, sizeof(tUsuario), 1, pf_usuarios))
     {
@@ -145,10 +147,18 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int * can
         {
             if(!(info = obtener_lrucache(&cache, &(usuario.feed[i]))))
             {
+                (*hits)++;
+            }
+            else
+            {
                 fseek(pf_post, usuario.feed[i] * sizeof(tPosteo), SEEK_SET);
                 fread(&post, sizeof(tPosteo), 1, pf_post);
                 agregar_lrucache(&cache, &post, sizeof(tPosteo));
+
+                (*misses)++;
             }
+
+            (*lecturas)++;
         }
 
         (*cantUsuarios)++;
@@ -161,7 +171,7 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int * can
     return TODO_BIEN;
 }
 
-int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int * cantUsuarios)
+int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int * cantUsuarios, int * hits, int * misses, int * lecturas)
 {
     tPosteo post;
     tUsuario usuario;
@@ -184,6 +194,9 @@ int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int * ca
     crear_lrucache2(&cache, TAM_CACHE, compararPosteo);
 
     *cantUsuarios = 0;
+    *hits = 0;
+    *misses = 0;
+    *lecturas = 0;
 
     while(fread(&usuario, sizeof(tUsuario), 1, pf_usuarios))
     {
@@ -191,10 +204,18 @@ int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int * ca
         {
             if(!(info = obtener_lrucache2(&cache, &(usuario.feed[i]))))
             {
+                (*hits)++;
+            }
+            else
+            {
                 fseek(pf_post, usuario.feed[i] * sizeof(tPosteo), SEEK_SET);
                 fread(&post, sizeof(tPosteo), 1, pf_post);
                 agregar_lrucache2(&cache, &post, sizeof(tPosteo));
+
+                (*misses)++;
             }
+
+            (*lecturas)++;
         }
 
         (*cantUsuarios)++;
