@@ -8,6 +8,10 @@
 #define MAX_FEED 20
 #define POOL_CONCENTRADO 100
 
+#define TAM_CACHE 10
+
+#include "comun.h"
+
 typedef enum
 {
     LOTE_CONCENTRADO, LOTE_DISPERSO, LOTE_ORDENADO
@@ -27,5 +31,6 @@ typedef struct
 
 int generarPosteos (const char *nombre);
 int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla);
+int procesarUsuario (const char * posteos, const char * usuarios, int * cantUsuarios);
 
 #endif // TWEENER_H_INCLUDED

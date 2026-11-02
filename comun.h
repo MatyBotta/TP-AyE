@@ -9,7 +9,8 @@ typedef enum
     SIN_MEM,
     DUPLICADO,
     LISTA_VACIA,
-    ERR_ARG
+    ERR_ARG,
+    ERR_ARCHIVO
 
 } cod_return;
 

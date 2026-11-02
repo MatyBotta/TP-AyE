@@ -10,7 +10,7 @@ int generarPosteos(const char *nombre)
     int i, j, largo;
 
     if(!pf)
-        return 0;
+        return ERR_ARCHIVO;
 
     for(i = 0; i < CANT_POSTEOS; i++)
     {
@@ -23,7 +23,7 @@ int generarPosteos(const char *nombre)
         fwrite(&p, sizeof(p), 1, pf);
     }
     fclose(pf);
-    return 1;
+    return TODO_BIEN;
 }
 
 int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla)
@@ -34,7 +34,7 @@ int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla)
     int cantUsuarios;
 
     if (!pf)
-        return 0;
+        return ERR_ARCHIVO;
 
     srand(semilla);
 
@@ -42,8 +42,11 @@ int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla)
 
     for (i = 0; i < cantUsuarios; i++)
     {
+        char buf[32];
         memset(&u, 0, sizeof(u));
-        snprintf(u.usuario, TAM_USUARIO, "user_%03d", i);
+        snprintf(buf, sizeof(buf), "user_%03d", i);
+        strncpy(u.usuario, buf, TAM_USUARIO - 1);
+        u.usuario[TAM_USUARIO - 1] = '\0';
 
         switch (tipo)
         {
@@ -71,5 +74,83 @@ int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla)
     }
 
     fclose(pf);
-    return 1;
+    return TODO_BIEN;
 }
+
+int procesarUsuario (const char * posteos, const char * usuarios, int * cantUsuarios)
+{
+    tPosteo post;
+    tUsuario usuario;
+
+    FILE * pf_post;
+    FILE * pf_usuarios = fopen(usuarios, "rb");
+    if(!pf_usuarios)
+        return ERR_ARCHIVO;
+
+
+    pf_post = fopen(posteos, "rb");
+    if(!pf_post)
+    {
+        fclose(pf_usuarios);
+        return ERR_ARCHIVO;
+    }
+
+    *cantUsuarios = 0;
+
+    while(fread(&usuario, sizeof(tUsuario), 1, pf_usuarios))
+    {
+        for(int i = 0; i < MAX_FEED; i++)
+        {
+            fseek(pf_post, usuario.feed[i] * sizeof(tPosteo), SEEK_SET);
+            fread(&post, sizeof(tPosteo), 1, pf_post);
+        }
+
+        (*cantUsuarios)++;
+    }
+
+    fclose(pf_post);
+    fclose(pf_usuarios);
+
+    return TODO_BIEN;
+}
+
+/*
+int procesarUsuarioCache (const char * posteos, const char * usuarios, int * cantUsuarios)
+{
+    tPosteo post;
+    tUsuario usuario;
+    tLRU cache;
+
+    FILE * pf_post;
+    FILE * pf_usuarios = fopen(usuarios, "rb");
+    if(!pf_usuarios)
+        return ERR_ARCHIVO;
+
+
+    pf_post = fopen(posteos, "rb");
+    if(!pf_post)
+    {
+        fclose(pf_usuarios);
+        return ERR_ARCHIVO;
+    }
+
+    *cantUsuarios = 0;
+
+    while(fread(&usuario, sizeof(tUsuario), 1, pf_usuarios))
+    {
+        for(int i = 0; i < MAX_FEED; i++)
+        {
+            fseek(pf_post, usuario.feed[i] * sizeof(tPosteo), SEEK_SET);
+            fread(&post, sizeof(tPosteo), 1, pf_post);
+        }
+
+        (*cantUsuarios)++;
+    }
+
+    fclose(pf_post);
+    fclose(pf_usuarios);
+
+    return TODO_BIEN;
+}
+
+*/
