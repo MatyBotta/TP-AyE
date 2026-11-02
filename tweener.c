@@ -27,19 +27,32 @@ int generarPosteos(const char *nombre)
     return TODO_BIEN;
 }
 
-int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla)
+int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla, int cantUsuarios)
 {
-    FILE *pf = fopen(nombre, "wb");
+    FILE *pf;
     tUsuario u;
     int i, j;
-    int cantUsuarios;
+    int idActual = 0, maxPaso = 1, repetir = 0;
 
+    if (cantUsuarios < MIN_REG)
+        return ERR_ARG;
+
+    if (tipo == LOTE_ORDENADO)
+    {
+        /* todos los ids del archivo forman una unica secuencia creciente
+           dentro de [0, CANT_POSTEOS). Si hay mas accesos que posteos
+           los ids se repiten (no decrecientes) */
+        if (cantUsuarios * MAX_FEED <= CANT_POSTEOS)
+            maxPaso = (CANT_POSTEOS - 1) / (cantUsuarios * MAX_FEED - 1);
+        else
+            repetir = 1;
+    }
+
+    pf = fopen(nombre, "wb");
     if (!pf)
         return ERR_ARCHIVO;
 
     srand(semilla);
-
-    cantUsuarios = MIN_REG + rand();
 
     for (i = 0; i < cantUsuarios; i++)
     {
@@ -62,11 +75,16 @@ int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla)
                 break;
 
             case LOTE_ORDENADO:
+                for (j = 0; j < MAX_FEED; j++)
                 {
-                    int base = rand() % (CANT_POSTEOS - MAX_FEED * 2);
-                    int paso  = 1 + rand() % 50;   // separación entre ids
-                    for (j = 0; j < MAX_FEED; j++)
-                        u.feed[j] = base + j * paso;
+                    if (repetir)
+                        u.feed[j] = (int)((double)(i * MAX_FEED + j) * (CANT_POSTEOS - 1)
+                                          / (cantUsuarios * MAX_FEED - 1));
+                    else
+                    {
+                        u.feed[j] = idActual;
+                        idActual += 1 + rand() % maxPaso;
+                    }
                 }
                 break;
         }
@@ -116,7 +134,7 @@ int procesarUsuario (const char * posteos, const char * usuarios, int * cantUsua
 }
 
 int procesarUsuarioCache (const char * posteos, const char * usuarios, int tamCache,
-                          int * cantUsuarios, int * hits, int * misses, int * lecturas)
+                          int * cantUsuarios, int * hits, int * misses)
 {
     tPosteo post;
     tUsuario usuario;
@@ -141,13 +159,12 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int tamCa
     *cantUsuarios = 0;
     *hits = 0;
     *misses = 0;
-    *lecturas = 0;
 
     while(fread(&usuario, sizeof(tUsuario), 1, pf_usuarios))
     {
         for(int i = 0; i < MAX_FEED; i++)
         {
-            if(!(info = obtener_lrucache(&cache, &(usuario.feed[i]))))
+            if((info = obtener_lrucache(&cache, &(usuario.feed[i]))))
             {
                 (*hits)++;
             }
@@ -159,8 +176,6 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int tamCa
 
                 (*misses)++;
             }
-
-            (*lecturas)++;
         }
 
         (*cantUsuarios)++;
@@ -174,7 +189,7 @@ int procesarUsuarioCache (const char * posteos, const char * usuarios, int tamCa
 }
 
 int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int tamCache,
-                           int * cantUsuarios, int * hits, int * misses, int * lecturas)
+                           int * cantUsuarios, int * hits, int * misses, size_t * altura)
 {
     tPosteo post;
     tUsuario usuario;
@@ -199,13 +214,12 @@ int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int tamC
     *cantUsuarios = 0;
     *hits = 0;
     *misses = 0;
-    *lecturas = 0;
 
     while(fread(&usuario, sizeof(tUsuario), 1, pf_usuarios))
     {
         for(int i = 0; i < MAX_FEED; i++)
         {
-            if(!(info = obtener_lrucache2(&cache, &(usuario.feed[i]))))
+            if((info = obtener_lrucache2(&cache, &(usuario.feed[i]))))
             {
                 (*hits)++;
             }
@@ -217,8 +231,6 @@ int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int tamC
 
                 (*misses)++;
             }
-
-            (*lecturas)++;
         }
 
         (*cantUsuarios)++;
@@ -226,6 +238,7 @@ int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int tamC
 
     fclose(pf_post);
     fclose(pf_usuarios);
+    *altura = altura_lrucache2(&cache);
     vaciar_lrucache2(&cache);
 
     return TODO_BIEN;
@@ -246,12 +259,12 @@ static double ahora_seg(void)
     return ts.tv_sec + ts.tv_nsec / 1e9;
 }
 
-int simular(const char *posteos, const char *usuarios,
-            int tamCache, tVariante variante)
+int simular(const char *posteos, const char *usuarios, int tamCache, tVariante variante)
 {
     int cantUsuarios = 0;
-    int hits = 0, misses = 0, lecturas = 0;
-    int rc;
+    int hits = 0, misses = 0;
+    size_t altura = 0;
+    int rc = 0;
     double t0, t1, seg;
 
     t0 = ahora_seg();
@@ -263,11 +276,11 @@ int simular(const char *posteos, const char *usuarios,
             break;
         case VARIANTE_P1:
             rc = procesarUsuarioCache(posteos, usuarios, tamCache,
-                                      &cantUsuarios, &hits, &misses, &lecturas);
+                                      &cantUsuarios, &hits, &misses);
             break;
         case VARIANTE_P2:
             rc = procesarUsuarioCache2(posteos, usuarios, tamCache,
-                                       &cantUsuarios, &hits, &misses, &lecturas);
+                                       &cantUsuarios, &hits, &misses, &altura);
             break;
     }
 
@@ -299,16 +312,14 @@ int simular(const char *posteos, const char *usuarios,
     {
         printf("Hits                : %d\n", hits);
         printf("Misses              : %d\n", misses);
-        printf("Lecturas al archivo : %d\n", lecturas);
         printf("Hit rate            : %.2f %%\n",
                100.0 * hits / totalAccesos);
+        if (variante == VARIANTE_P2)
+            printf("Altura del indice   : %lu\n", (unsigned long)altura);
 
         if (hits + misses != totalAccesos)
             fprintf(stderr, "WARN: hits+misses (%d) != accesos (%ld)\n",
                     hits + misses, totalAccesos);
-        if (lecturas != misses)
-            fprintf(stderr, "WARN: lecturas (%d) != misses (%d)\n",
-                    lecturas, misses);
     }
 
     return TODO_BIEN;

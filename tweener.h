@@ -34,13 +34,14 @@ typedef struct
 } tUsuario;
 
 int generarPosteos (const char *nombre);
-int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla);
+int generarUsuarios(const char *nombre, tTipoLote tipo, unsigned int semilla, int cantUsuarios);
 int procesarUsuario (const char * posteos, const char * usuarios, int * cantUsuarios);
 int procesarUsuarioCache (const char * posteos, const char * usuarios, int tamCache,
-                          int * cantUsuarios, int * hits, int * misses, int * lecturas);
+                          int * cantUsuarios, int * hits, int * misses);
 int procesarUsuarioCache2 (const char * posteos, const char * usuarios, int tamCache,
-                           int * cantUsuarios, int * hits, int * misses, int * lecturas);
+                           int * cantUsuarios, int * hits, int * misses, size_t * altura);
 
 int compararPosteo (const void * s1, const void * s2);
+int simular(const char *posteos, const char *usuarios, int tamCache, tVariante variante);
 
 #endif // TWEENER_H_INCLUDED
